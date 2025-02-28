@@ -277,7 +277,7 @@ function Dashboard() {
               <div className="steam"></div>
             </div>
           </div>
-          <h2>Coffee Shop</h2>
+          <h2>Kaffi</h2>
           <p className="user-role">{userRole === 'admin' ? 'Administrator' : 'Employee'}</p>
         </div>
         
@@ -307,7 +307,7 @@ function Dashboard() {
       
       <main className="main-content">
         <header className="dashboard-header">
-          <h1>Coffee Shop Management</h1>
+          <h1>Kaffi Cafe</h1>
           <div className="user-info">
             <span>Welcome, {user ? user.email : ''}</span>
           </div>

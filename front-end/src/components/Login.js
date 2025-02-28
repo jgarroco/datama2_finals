@@ -56,8 +56,7 @@ function Login() {
 
     // Demo credentials - replace these with your actual test accounts in Supabase
     const credentials = {
-      admin: { email: 'admin@coffeeshop.com', password: 'password123' },
-      employee: { email: 'employee@coffeeshop.com', password: 'password123' }
+      dev: { email: 'developer@kaffi.com', password: 'kafficafe' },
     };
 
     try {
@@ -121,17 +120,10 @@ function Login() {
           <p>Demo accounts:</p>
           <button 
             className="demo-button" 
-            onClick={() => handleDemoLogin('admin')}
+            onClick={() => handleDemoLogin('dev')}
             disabled={loading}
           >
-            Login as Admin
-          </button>
-          <button 
-            className="demo-button" 
-            onClick={() => handleDemoLogin('employee')}
-            disabled={loading}
-          >
-            Login as Employee
+            Login as Developer
           </button>
         </div>
       </div>
