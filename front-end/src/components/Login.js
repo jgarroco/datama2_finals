@@ -81,12 +81,12 @@ function Login() {
   return (
     <div className="login-container">
       <div className="login-form-wrapper">
-        <div className="coffee-logo">
+        <div className="coffee-logo"> 
           <div className="coffee-cup">
             <div className="steam"></div>
           </div>
         </div>
-        <h1>Coffee Shop Login</h1>
+        <h1>Kaffi Cafe Login</h1>
         <form onSubmit={handleLogin} className="login-form">
           {error && <div className="error-message">{error}</div>}
           <div className="form-group">
