@@ -352,3 +352,27 @@
       margin-bottom: 10px;
     }
   }
+
+  .loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    font-size: 18px;
+    color: #6f4e37;
+  }
+  
+  .loading-spinner::after {
+    content: '';
+    width: 20px;
+    height: 20px;
+    margin-left: 15px;
+    border: 2px solid #6f4e37;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s ease-in-out infinite;
+  }
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }

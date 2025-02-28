@@ -36,3 +36,12 @@
     transform: rotate(360deg);
   }
 }
+
+.app-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 18px;
+  color: #6f4e37;
+}

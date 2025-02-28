@@ -1,28 +1,79 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Login.css'; 
+import './Login.css';
+import supabase from '../supabase/supabaseClient';
 
 function Login() {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  useEffect(() => {
+    // Check if user is already logged in
+    const checkUser = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        navigate('/dashboard');
+      }
+    };
     
-    // For demonstration purposes - in a real app you'd validate against your backend
-    if (username === 'admin' && password === 'password') {
-      // Store some user info in localStorage (use a proper auth system in production)
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('userRole', 'admin');
+    checkUser();
+  }, [navigate]);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
+      
+      // Store user role - in a real app, you'd fetch this from your user profiles table
+      // For now we'll use a simple check - admin emails have "admin" in them
+      const userRole = email.includes('admin') ? 'admin' : 'employee';
+      localStorage.setItem('userRole', userRole);
+      
       navigate('/dashboard');
-    } else if (username === 'employee' && password === 'password') {
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('userRole', 'employee');
+    } catch (error) {
+      console.error('Error logging in:', error.message);
+      setError(error.message || 'Failed to log in');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDemoLogin = async (role) => {
+    setLoading(true);
+    setError('');
+
+    // Demo credentials - replace these with your actual test accounts in Supabase
+    const credentials = {
+      admin: { email: 'admin@coffeeshop.com', password: 'password123' },
+      employee: { email: 'employee@coffeeshop.com', password: 'password123' }
+    };
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: credentials[role].email,
+        password: credentials[role].password
+      });
+
+      if (error) throw error;
+      
+      localStorage.setItem('userRole', role);
       navigate('/dashboard');
-    } else {
-      setError('Invalid username or password');
+    } catch (error) {
+      console.error('Error with demo login:', error.message);
+      setError('Demo login failed. Please check if these accounts exist in your Supabase auth.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -35,15 +86,15 @@ function Login() {
           </div>
         </div>
         <h1>Coffee Shop Login</h1>
-        <form onSubmit={handleSubmit} className="login-form">
+        <form onSubmit={handleLogin} className="login-form">
           {error && <div className="error-message">{error}</div>}
           <div className="form-group">
-            <label htmlFor="username">Username</label>
+            <label htmlFor="email">Email</label>
             <input
-              type="text"
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
@@ -57,12 +108,30 @@ function Login() {
               required
             />
           </div>
-          <button type="submit" className="login-button">Login</button>
+          <button 
+            type="submit" 
+            className="login-button"
+            disabled={loading}
+          >
+            {loading ? 'Logging in...' : 'Login'}
+          </button>
         </form>
         <div className="login-helper">
           <p>Demo accounts:</p>
-          <p>Admin: admin / password</p>
-          <p>Employee: employee / password</p>
+          <button 
+            className="demo-button" 
+            onClick={() => handleDemoLogin('admin')}
+            disabled={loading}
+          >
+            Login as Admin
+          </button>
+          <button 
+            className="demo-button" 
+            onClick={() => handleDemoLogin('employee')}
+            disabled={loading}
+          >
+            Login as Employee
+          </button>
         </div>
       </div>
     </div>

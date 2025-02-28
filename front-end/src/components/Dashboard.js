@@ -1,57 +1,139 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
+import supabase from '../supabase/supabaseClient';
 
 function Dashboard() {
   const navigate = useNavigate();
   const [userRole, setUserRole] = useState('');
   const [activeTab, setActiveTab] = useState('overview');
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
   
-  // Sample coffee shop data
+  // State for dashboard data
   const [coffeeData, setCoffeeData] = useState({
-    dailySales: 1250.75,
-    popularItems: [
-      { name: 'Cappuccino', sold: 42 },
-      { name: 'Latte', sold: 38 },
-      { name: 'Espresso', sold: 30 },
-      { name: 'Mocha', sold: 25 },
-      { name: 'Cold Brew', sold: 22 }
-    ],
-    inventory: [
-      { item: 'Coffee Beans (Arabica)', quantity: 25, unit: 'kg' },
-      { item: 'Coffee Beans (Robusta)', quantity: 15, unit: 'kg' },
-      { item: 'Milk', quantity: 45, unit: 'L' },
-      { item: 'Sugar', quantity: 30, unit: 'kg' },
-      { item: 'Chocolate Syrup', quantity: 12, unit: 'bottles' }
-    ],
-    employees: [
-      { id: 1, name: 'John Smith', role: 'Barista', shift: 'Morning' },
-      { id: 2, name: 'Emma Johnson', role: 'Barista', shift: 'Evening' },
-      { id: 3, name: 'Michael Brown', role: 'Cashier', shift: 'Morning' },
-      { id: 4, name: 'Sophia Davis', role: 'Cashier', shift: 'Evening' },
-      { id: 5, name: 'Daniel Wilson', role: 'Manager', shift: 'Full day' }
-    ]
+    dailySales: 0,
+    popularItems: [],
+    inventory: [],
+    employees: []
   });
 
   useEffect(() => {
-    // Check if user is logged in
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
-    const role = localStorage.getItem('userRole');
-    
-    if (!isLoggedIn) {
-      navigate('/login');
-    } else {
+    // Check if user is logged in with Supabase
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        navigate('/login');
+        return;
+      }
+      
+      setUser(session.user);
+      const role = localStorage.getItem('userRole') || 'employee';
       setUserRole(role);
-    }
+      
+      // Load data
+      fetchDashboardData();
+    };
+    
+    checkUser();
   }, [navigate]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('isLoggedIn');
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    try {
+      // Fetch daily sales
+      const { data: salesData, error: salesError } = await supabase
+        .from('sales')
+        .select('amount')
+        .gte('created_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
+        .lt('created_at', new Date(new Date().setHours(23, 59, 59, 999)).toISOString());
+      
+      if (salesError) throw salesError;
+      
+      const dailySales = salesData.reduce((sum, item) => sum + item.amount, 0);
+      
+      // Fetch popular items
+      const { data: popularItems, error: itemsError } = await supabase
+        .from('order_items')
+        .select('product_id, products(name), count')
+        .gte('created_at', new Date(new Date().setDate(new Date().getDate() - 7)).toISOString())
+        .order('count', { ascending: false })
+        .limit(5);
+      
+      if (itemsError) throw itemsError;
+      
+      // Fetch inventory
+      const { data: inventory, error: inventoryError } = await supabase
+        .from('inventory')
+        .select('*')
+        .order('item', { ascending: true });
+      
+      if (inventoryError) throw inventoryError;
+      
+      // Fetch employees
+      const { data: employees, error: employeesError } = await supabase
+        .from('employees')
+        .select('*')
+        .order('name', { ascending: true });
+      
+      if (employeesError) throw employeesError;
+      
+      setCoffeeData({
+        dailySales,
+        popularItems: popularItems.map(item => ({
+          name: item.products.name,
+          sold: item.count
+        })),
+        inventory,
+        employees
+      });
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      // If there's an error, load dummy data for demo purposes
+      setCoffeeData({
+        dailySales: 1250.75,
+        popularItems: [
+          { name: 'Cappuccino', sold: 42 },
+          { name: 'Latte', sold: 38 },
+          { name: 'Espresso', sold: 30 },
+          { name: 'Mocha', sold: 25 },
+          { name: 'Cold Brew', sold: 22 }
+        ],
+        inventory: [
+          { item: 'Coffee Beans (Arabica)', quantity: 25, unit: 'kg' },
+          { item: 'Coffee Beans (Robusta)', quantity: 15, unit: 'kg' },
+          { item: 'Milk', quantity: 45, unit: 'L' },
+          { item: 'Sugar', quantity: 30, unit: 'kg' },
+          { item: 'Chocolate Syrup', quantity: 12, unit: 'bottles' }
+        ],
+        employees: [
+          { id: 1, name: 'John Smith', role: 'Barista', shift: 'Morning' },
+          { id: 2, name: 'Emma Johnson', role: 'Barista', shift: 'Evening' },
+          { id: 3, name: 'Michael Brown', role: 'Cashier', shift: 'Morning' },
+          { id: 4, name: 'Sophia Davis', role: 'Cashier', shift: 'Evening' },
+          { id: 5, name: 'Daniel Wilson', role: 'Manager', shift: 'Full day' }
+        ]
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     localStorage.removeItem('userRole');
     navigate('/login');
   };
 
+  // The rest of your code (renderTabContent function) remains mostly the same,
+  // but we'll add loading states
+
   const renderTabContent = () => {
+    if (loading) {
+      return <div className="loading-spinner">Loading...</div>;
+    }
+
     switch(activeTab) {
       case 'overview':
         return (
@@ -114,7 +196,7 @@ function Dashboard() {
                 ))}
               </tbody>
             </table>
-            <button className="action-button">Order Supplies</button>
+            <button className="action-button" onClick={() => alert('This would open a form to order new supplies')}>Order Supplies</button>
           </div>
         );
       case 'employees':
@@ -149,26 +231,23 @@ function Dashboard() {
               </tbody>
             </table>
             {userRole === 'admin' && (
-              <button className="action-button">Add Employee</button>
+              <button className="action-button" onClick={() => alert('This would open a form to add a new employee')}>Add Employee</button>
             )}
           </div>
         );
+      // Settings tab remains mostly the same
       case 'settings':
         return (
           <div className="dashboard-card">
             <h2>Account Settings</h2>
             <form className="settings-form">
               <div className="form-group">
-                <label>Username</label>
-                <input type="text" value={userRole === 'admin' ? 'admin' : 'employee'} disabled />
+                <label>Email</label>
+                <input type="text" value={user ? user.email : ''} disabled />
               </div>
               <div className="form-group">
                 <label>Role</label>
                 <input type="text" value={userRole === 'admin' ? 'Administrator' : 'Employee'} disabled />
-              </div>
-              <div className="form-group">
-                <label>Email</label>
-                <input type="email" value="user@coffeeshop.com" />
               </div>
               <div className="form-group">
                 <label>New Password</label>
@@ -230,7 +309,7 @@ function Dashboard() {
         <header className="dashboard-header">
           <h1>Coffee Shop Management</h1>
           <div className="user-info">
-            <span>Welcome, {userRole === 'admin' ? 'Admin' : 'Employee'}</span>
+            <span>Welcome, {user ? user.email : ''}</span>
           </div>
         </header>
         
