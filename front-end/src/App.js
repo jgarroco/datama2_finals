@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import './App.css';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
-import supabase from './supabase/supabaseClient';
+import supabase from './components/supabase/supabaseClient';
 
 // Protected route component
 const ProtectedRoute = ({ children }) => {

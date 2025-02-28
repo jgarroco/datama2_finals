@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
-import supabase from '../supabase/supabaseClient';
+import supabase from './supabase/supabaseClient';
+
 
 function Login() {
   const [email, setEmail] = useState('');
