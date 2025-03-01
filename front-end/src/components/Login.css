@@ -64,31 +64,34 @@
     font-size: 14px;
   }
   
-  .coffee-logo {
+  .login-coffee-logo {
     margin-bottom: 20px;
   }
   
-  .coffee-cup {
+  /* COFFEE MUG COLOR SETTINGS - Login Page */
+  /* Change the background-color below to modify the mug color */
+  .login-coffee-cup {
     position: relative;
     width: 60px;
     height: 70px;
-    background-color: #6F84A1;
+    background-color: #6F84A1; /* COFFEE MUG COLOR */
     border-radius: 0 0 20px 20px;
     margin: 0 auto;
   }
   
-  .coffee-cup::before {
+  /* Change the border color below to modify the mug handle color */
+  .login-coffee-cup::before {
     content: '';
     position: absolute;
     right: -15px;
     top: 15px;
     width: 20px;
     height: 30px;
-    border: 5px solid #5A6B82;
+    border: 5px solid #6F84A1; /* COFFEE MUG HANDLE COLOR */
     border-radius: 0 20px 20px 0;
   }
   
-  .steam {
+  .login-steam {
     position: absolute;
     top: -15px;
     left: 10px;
@@ -100,12 +103,12 @@
     animation: steam 2s infinite;
   }
   
-  .steam:nth-child(2) {
+  .login-steam:nth-child(2) {
     left: 25px;
     animation-delay: 0.4s;
   }
   
-  .steam:nth-child(3) {
+  .login-steam:nth-child(3) {
     left: 40px;
     animation-delay: 0.8s;
   }

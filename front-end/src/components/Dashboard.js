@@ -269,11 +269,11 @@ function Dashboard() {
     <div className="dashboard-container">
       <aside className="sidebar">
         <div className="sidebar-header">
-          <div className="coffee-logo">
-            <div className="coffee-cup">
-              <div className="steam"></div>
-              <div className="steam"></div>
-              <div className="steam"></div>
+          <div className="dashboard-coffee-logo">
+            <div className="dashboard-coffee-cup">
+              <div className="dashboard-steam"></div>
+              <div className="dashboard-steam"></div>
+              <div className="dashboard-steam"></div>
             </div>
           </div>
           <h2>Kaffi</h2>

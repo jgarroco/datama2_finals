@@ -80,9 +80,9 @@ function Login() {
   return (
     <div className="login-container">
       <div className="login-form-wrapper">
-        <div className="coffee-logo"> 
-          <div className="coffee-cup">
-            <div className="steam"></div>
+        <div className="login-coffee-logo"> 
+          <div className="login-coffee-cup">
+            <div className="login-steam"></div>
           </div>
         </div>
         <h1>Kaffi Cafe Login</h1>
