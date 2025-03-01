@@ -5,6 +5,10 @@
 /.pnp
 .pnp.js
 
+# package manager
+package-lock.json
+# DO NOT ignore yarn.lock as it ensures consistent installs
+
 # testing
 /coverage
 
