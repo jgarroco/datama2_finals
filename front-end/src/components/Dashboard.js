@@ -196,7 +196,6 @@ function Dashboard() {
                 ))}
               </tbody>
             </table>
-            <button className="action-button" onClick={() => alert('This would open a form to order new supplies')}>Order Supplies</button>
           </div>
         );
       case 'employees':
