@@ -3,7 +3,8 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import './App.css';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
-import supabase from './components/supabase/supabaseClient';
+import POS from './components/POS';
+import { supabase } from './supabaseClient';
 
 // Protected route component
 const ProtectedRoute = ({ children }) => {
@@ -48,15 +49,18 @@ function App() {
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route 
-          path="/dashboard" 
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } 
-        />
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        {/* Use the ProtectedRoute component to protect these routes */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/pos" element={
+          <ProtectedRoute>
+            <POS />
+          </ProtectedRoute>
+        } />
+        <Route path="/" element={<Navigate to="/login" />} />
       </Routes>
     </Router>
   );

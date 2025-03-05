@@ -16,7 +16,8 @@ function Login() {
     const checkUser = async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
-        navigate('/dashboard');
+        // Redirect to POS instead of Dashboard
+        navigate('/pos');
       }
     };
     
@@ -33,7 +34,7 @@ function Login() {
         email,
         password
       });
-
+    
       if (error) throw error;
       
       // Store user role - in a real app, you'd fetch this from your user profiles table
@@ -41,7 +42,8 @@ function Login() {
       const userRole = email.includes('admin') ? 'admin' : 'employee';
       localStorage.setItem('userRole', userRole);
       
-      navigate('/dashboard');
+      // Redirect to POS instead of Dashboard
+      navigate('/pos');
     } catch (error) {
       console.error('Error logging in:', error.message);
       setError(error.message || 'Failed to log in');
@@ -64,12 +66,9 @@ function Login() {
         email: credentials[role].email,
         password: credentials[role].password
       });
-
-      if (error) throw error;
-      
-      localStorage.setItem('userRole', role);
-      navigate('/dashboard');
-    } catch (error) {
+  // Redirect to POS instead of Dashboard
+  navigate('/pos');
+} catch (error) {
       console.error('Error with demo login:', error.message);
       setError('Demo login failed. Please check if these accounts exist in your Supabase auth.');
     } finally {

@@ -92,7 +92,10 @@ const Dashboard = ({ session }) => {
       }
     };
   }, [navigate]);
-
+  // Add this function near other navigation functions
+  const handleGoToPOS = () => {
+    navigate('/pos');
+  };
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
@@ -486,6 +489,9 @@ const Dashboard = ({ session }) => {
           <h1>Kaffi Cafe</h1>
           <div className="user-info">
             <span>Welcome, {user ? user.email : ''}</span>
+            <button className="pos-button" onClick={handleGoToPOS}>
+              <i className="icon">💰</i> POS System
+            </button>
           </div>
         </header>
         

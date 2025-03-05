@@ -379,3 +379,32 @@
   @keyframes spin {
     to { transform: rotate(360deg); }
   }
+
+/* POS button */
+.pos-button {
+  margin-left: 15px;
+  padding: 8px 15px;
+  background-color: #e67e22;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.pos-button:hover {
+  background-color: #d35400;
+}
+
+.pos-button .icon {
+  margin-right: 5px;
+}
+
+/* Update user-info to display items in a row */
+.user-info {
+  display: flex;
+  align-items: center;
+}
