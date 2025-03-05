@@ -4,18 +4,22 @@ import './POS.css';
 import { supabase } from '../supabaseClient';
 
 const POS = () => {
-  const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [activeCategory, setActiveCategory] = useState('coffee');
-  const [cart, setCart] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState('cash');
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [amountReceived, setAmountReceived] = useState('');
-  const [change, setChange] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [orderComplete, setOrderComplete] = useState(false);
-
+    const navigate = useNavigate();
+    const [user, setUser] = useState(null);
+    const [activeCategory, setActiveCategory] = useState('coffee');
+    const [cart, setCart] = useState([]);
+    const [total, setTotal] = useState(0);
+    const [paymentMethod, setPaymentMethod] = useState('cash');
+    // Add these new states for card and mobile payment subtypes
+    const [cardType, setCardType] = useState('credit');
+    const [cardNetwork, setCardNetwork] = useState('visa');
+    const [mobilePaymentType, setMobilePaymentType] = useState('gcash');
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [amountReceived, setAmountReceived] = useState('');
+    const [change, setChange] = useState(0);
+    const [loading, setLoading] = useState(false);
+    const [orderComplete, setOrderComplete] = useState(false);
+  
   // Menu items organized by category
   const menuItems = {
     coffee: [
@@ -195,6 +199,17 @@ const POS = () => {
         setChange(parseFloat(amountReceived) - total);
       }
 
+      // Get payment details based on method
+      let paymentDetails = { method: paymentMethod };
+      
+      // Add specific details based on payment method
+      if (paymentMethod === 'card') {
+        paymentDetails.cardType = cardType;
+        paymentDetails.cardNetwork = cardNetwork;
+      } else if (paymentMethod === 'mobile') {
+        paymentDetails.mobileType = mobilePaymentType;
+      }
+
       // Record the sale in Supabase
       const { data, error } = await supabase
         .from('sales')
@@ -202,6 +217,7 @@ const POS = () => {
           { 
             amount: total,
             payment_method: paymentMethod,
+            payment_details: JSON.stringify(paymentDetails),
             items: JSON.stringify(cart),
             created_by: user.id
           }
@@ -219,6 +235,10 @@ const POS = () => {
         setCart([]);
         setAmountReceived('');
         setChange(0);
+        // Reset payment method options
+        setCardType('credit');
+        setCardNetwork('visa');
+        setMobilePaymentType('gcash');
       }, 3000);
       
     } catch (error) {
@@ -230,9 +250,9 @@ const POS = () => {
   };
 
   const handleBackToDashboard = () => {
-    navigate('/dashboard');
-  };
-
+      navigate('/dashboard');
+    };
+  // Fix the return statement structure
   return (
     <div className="pos-container">
       <aside className="pos-sidebar">
@@ -264,7 +284,7 @@ const POS = () => {
         
         <div className="sidebar-footer">
           <button onClick={handleBackToDashboard} className="logout-button">
-            <i className="icon">➡️</i> Go to Dashboard
+            <i className="icon">🔙</i> Back to Dashboard
           </button>
         </div>
       </aside>
@@ -318,8 +338,8 @@ const POS = () => {
             </div>
             
             <div className="cart-total">
-              <div className="total-label">Total</div>
-              <div className="total-amount">₱{total.toFixed(2)}</div>
+              <span>Total:</span>
+              <span>₱{total.toFixed(2)}</span>
             </div>
             
             <button 
@@ -332,8 +352,7 @@ const POS = () => {
           </div>
         </div>
       </main>
-      
-      {showPaymentModal && (
+  {showPaymentModal && (
         <div className="payment-modal-overlay">
           <div className="payment-modal">
             {!orderComplete ? (
@@ -388,6 +407,68 @@ const POS = () => {
                       )}
                     </div>
                   )}
+                  
+                  {/* Add Card Payment Options */}
+                  {paymentMethod === 'card' && (
+                    <div className="card-payment">
+                      <div className="card-type-options">
+                        <h4>Card Type</h4>
+                        <div className="option-buttons">
+                          <button 
+                            className={`option-button ${cardType === 'credit' ? 'active' : ''}`}
+                            onClick={() => setCardType('credit')}
+                          >
+                            Credit Card
+                          </button>
+                          <button 
+                            className={`option-button ${cardType === 'debit' ? 'active' : ''}`}
+                            onClick={() => setCardType('debit')}
+                          >
+                            Debit Card
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div className="card-network-options">
+                        <h4>Card Network</h4>
+                        <div className="option-buttons">
+                          <button 
+                            className={`option-button ${cardNetwork === 'visa' ? 'active' : ''}`}
+                            onClick={() => setCardNetwork('visa')}
+                          >
+                            <i className="icon">💳</i> Visa
+                          </button>
+                          <button 
+                            className={`option-button ${cardNetwork === 'mastercard' ? 'active' : ''}`}
+                            onClick={() => setCardNetwork('mastercard')}
+                          >
+                            <i className="icon">💳</i> Mastercard
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Add Mobile Payment Options */}
+                  {paymentMethod === 'mobile' && (
+                    <div className="mobile-payment">
+                      <h4>Mobile Payment Provider</h4>
+                      <div className="option-buttons">
+                        <button 
+                          className={`option-button ${mobilePaymentType === 'gcash' ? 'active' : ''}`}
+                          onClick={() => setMobilePaymentType('gcash')}
+                        >
+                          <i className="icon">📱</i> GCash
+                        </button>
+                        <button 
+                          className={`option-button ${mobilePaymentType === 'maya' ? 'active' : ''}`}
+                          onClick={() => setMobilePaymentType('maya')}
+                        >
+                          <i className="icon">📱</i> Maya
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="payment-actions">
@@ -413,6 +494,16 @@ const POS = () => {
                 {paymentMethod === 'cash' && (
                   <div className="change-info">
                     <p>Change: ₱{change.toFixed(2)}</p>
+                  </div>
+                )}
+                {paymentMethod === 'card' && (
+                  <div className="payment-info">
+                    <p>{cardType === 'credit' ? 'Credit Card' : 'Debit Card'} ({cardNetwork})</p>
+                  </div>
+                )}
+                {paymentMethod === 'mobile' && (
+                  <div className="payment-info">
+                    <p>Mobile Payment: {mobilePaymentType.toUpperCase()}</p>
                   </div>
                 )}
                 <p>Thank you for your purchase!</p>
