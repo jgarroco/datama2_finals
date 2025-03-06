@@ -148,20 +148,34 @@ const Dashboard = ({ session }) => {
       
       // Fetch inventory
       const { data: inventory, error: inventoryError } = await supabase
-        .from('inventory')
-        .select('id, item, quantity, unit')
-        .order('item', { ascending: true });
+      .from('inventory')
+      .select('id, item, quantity, unit, min_stock_level, last_updated, updated_by')
+      .order('id', { ascending: true });
+    
+    if (inventoryError) {
+      console.error('❌ Error fetching inventory:', inventoryError);
+    } else {
+      console.log('✅ Inventory Data:', inventory);
+    }
+    
+    setCoffeeData(prevData => ({ ...prevData, inventory: inventory || [] }));
+    
       
-      if (inventoryError) throw inventoryError;
-      
-      // Fetch employees
+      // I CHANGED THIS PART - ANDREI =========================================================================================
+      // Fetch employees 
       const { data: employees, error: employeesError } = await supabase
         .from('employees')
-        .select('id, name, role, shift, auth_id')
-        .order('name', { ascending: true });
-      
-      if (employeesError) throw employeesError;
-      
+        .select('id, name, role, shift')
+        .order('id', { ascending: true }); // Sort by ID instead of name
+    
+
+      if (employeesError) {
+        console.error('Error fetching employees:', employeesError);
+        setCoffeeData(prevData => ({ ...prevData, employees: [] }));
+      } else {
+        setCoffeeData(prevData => ({ ...prevData, employees: employees || [] }));
+      }
+
       setCoffeeData({
         dailySales: dailySales || 0,
         popularItems: popularItems || [],
@@ -181,21 +195,22 @@ const Dashboard = ({ session }) => {
             { name: 'Mobile Payment', sold: 30 },
             { name: 'Gift Card', sold: 25 },
             { name: 'Other', sold: 22 }
-          ],
-          inventory: [
-            { id: 1, item: 'Coffee Beans (Arabica)', quantity: 25, unit: 'kg' },
-            { id: 2, item: 'Coffee Beans (Robusta)', quantity: 15, unit: 'kg' },
-            { id: 3, item: 'Milk', quantity: 45, unit: 'L' },
-            { id: 4, item: 'Sugar', quantity: 30, unit: 'kg' },
-            { id: 5, item: 'Chocolate Syrup', quantity: 12, unit: 'bottles' }
-          ],
-          employees: [
-            { id: 1, name: 'John Smith', role: 'Barista', shift: 'Morning' },
-            { id: 2, name: 'Emma Johnson', role: 'Barista', shift: 'Evening' },
-            { id: 3, name: 'Michael Brown', role: 'Cashier', shift: 'Morning' },
-            { id: 4, name: 'Sophia Davis', role: 'Cashier', shift: 'Evening' },
-            { id: 5, name: 'Daniel Wilson', role: 'Manager', shift: 'Full day' }
           ]
+          // inventory: [
+          //   { id: 1, item: 'Coffee Beans (Arabica)', quantity: 25, unit: 'kg' },
+          //   { id: 2, item: 'Coffee Beans (Robusta)', quantity: 15, unit: 'kg' },
+          //   { id: 3, item: 'Milk', quantity: 45, unit: 'L' },
+          //   { id: 4, item: 'Sugar', quantity: 30, unit: 'kg' },
+          //   { id: 5, item: 'Chocolate Syrup', quantity: 12, unit: 'bottles' }
+          // ],
+          // COMENTED CUZ ITS PROBABLY NOT NEEDED IN THE FUTURE
+          // employees: [
+          //   { id: 1, name: 'John Smith', role: 'Barista', shift: 'Morning' },
+          //   { id: 2, name: 'Emma Johnson', role: 'Barista', shift: 'Evening' },
+          //   { id: 3, name: 'Michael Brown', role: 'Cashier', shift: 'Morning' },
+          //   { id: 4, name: 'Sophia Davis', role: 'Cashier', shift: 'Evening' },
+          //   { id: 5, name: 'Daniel Wilson', role: 'Manager', shift: 'Full day' }
+          // ]
         });
       } else {
         // In production, set empty values instead of dummy data

@@ -1,258 +1,249 @@
+//backend code to supabase credit goes to me, 'I CODED IT!!!!!' said Andrei
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './POS.css';
 import { supabase } from '../supabaseClient';
+import './POS.css';
 
 const POS = () => {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
-    const [activeCategory, setActiveCategory] = useState('coffee');
     const [cart, setCart] = useState([]);
     const [total, setTotal] = useState(0);
     const [paymentMethod, setPaymentMethod] = useState('cash');
-    // Add these new states for card and mobile payment subtypes
-    const [cardType, setCardType] = useState('credit');
-    const [cardNetwork, setCardNetwork] = useState('visa');
-    const [mobilePaymentType, setMobilePaymentType] = useState('gcash');
+    const [cardType, setCardType] = useState(null);
+    const [cardNetwork, setCardNetwork] = useState(null);
+    const [mobilePaymentType, setMobilePaymentType] = useState(null);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [amountReceived, setAmountReceived] = useState('');
     const [change, setChange] = useState(0);
     const [loading, setLoading] = useState(false);
     const [orderComplete, setOrderComplete] = useState(false);
-  
-  // Menu items organized by category
-  const menuItems = {
-    coffee: [
-      { id: 'c1', name: 'Espresso', price: 90, image: '☕' },
-      { id: 'c2', name: 'Cappuccino', price: 120, image: '☕' },
-      { id: 'c3', name: 'Latte', price: 130, image: '☕' },
-    ],
-    nonCoffee: [
-      { id: 'nc1', name: 'Hot Chocolate', price: 110, image: '🍫' },
-      { id: 'nc2', name: 'Steamed Milk', price: 90, image: '🥛' },
-    ],
-    matcha: [
-      { id: 'm1', name: 'Matcha Latte', price: 140, image: '🍵' },
-      { id: 'm2', name: 'Iced Matcha', price: 150, image: '🍵' },
-    ],
-    cloud: [
-      { id: 'cl1', name: 'Cloud Coffee', price: 160, image: '☁️' },
-      { id: 'cl2', name: 'Vanilla Cloud', price: 170, image: '☁️' },
-    ],
-    frappe: [
-      { id: 'f1', name: 'Coffee Frappe', price: 160, image: '🥤' },
-      { id: 'f2', name: 'Mocha Frappe', price: 170, image: '🥤' },
-    ],
-    yogurt: [
-      { id: 'y1', name: 'Strawberry Yogurt', price: 140, image: '🍓' },
-      { id: 'y2', name: 'Blueberry Yogurt', price: 140, image: '🫐' },
-    ],
-    milkTea: [
-      { id: 'mt1', name: 'Classic Milk Tea', price: 120, image: '🧋' },
-      { id: 'mt2', name: 'Taro Milk Tea', price: 130, image: '🧋' },
-    ],
-    fruitTea: [
-      { id: 'ft1', name: 'Lemon Tea', price: 110, image: '🍋' },
-      { id: 'ft2', name: 'Peach Tea', price: 120, image: '🍑' },
-    ],
-    fruitSoda: [
-      { id: 'fs1', name: 'Strawberry Soda', price: 130, image: '🥤' },
-      { id: 'fs2', name: 'Blue Lemonade', price: 130, image: '🥤' },
-    ],
-    croffles: [
-      { id: 'cr1', name: 'Plain Croffle', price: 95, image: '🥐' },
-      { id: 'cr2', name: 'Chocolate Croffle', price: 110, image: '🥐' },
-    ],
-    cakes: [
-      { id: 'ck1', name: 'Chocolate Cake', price: 150, image: '🍰' },
-      { id: 'ck2', name: 'Cheesecake', price: 160, image: '🍰' },
-    ],
-    pastries: [
-      { id: 'p1', name: 'Cinnamon Roll', price: 120, image: '🥮' },
-      { id: 'p2', name: 'Danish', price: 110, image: '🥮' },
-    ],
-    croissant: [
-      { id: 'cs1', name: 'Ham & Cheese', price: 140, image: '🥪' },
-      { id: 'cs2', name: 'Tuna', price: 150, image: '🥪' },
-    ],
-    fries: [
-      { id: 'fr1', name: 'Regular Fries', price: 90, image: '🍟' },
-      { id: 'fr2', name: 'Cheese Fries', price: 120, image: '🍟' },
-    ],
-    pasta: [
-      { id: 'pa1', name: 'Carbonara', price: 180, image: '🍝' },
-      { id: 'pa2', name: 'Bolognese', price: 190, image: '🍝' },
-    ],
-    cookies: [
-      { id: 'co1', name: 'Chocolate Chip', price: 80, image: '🍪' },
-      { id: 'co2', name: 'Oatmeal', price: 80, image: '🍪' },
-    ],
-  };
+    const [activeCategory, setActiveCategory] = useState('coffee');
 
-  // Category labels for display
-  const categories = [
-    { id: 'coffee', name: 'Coffee Based Drinks', icon: '☕' },
-    { id: 'nonCoffee', name: 'Non-Coffee Drinks', icon: '🥛' },
-    { id: 'matcha', name: 'Matcha Series', icon: '🍵' },
-    { id: 'cloud', name: 'Cloud Series', icon: '☁️' },
-    { id: 'frappe', name: 'Frappe Drinks', icon: '🥤' },
-    { id: 'yogurt', name: 'Yogurt Drinks', icon: '🧁' },
-    { id: 'milkTea', name: 'Milk Tea', icon: '🧋' },
-    { id: 'fruitTea', name: 'Fruit Tea', icon: '🍵' },
-    { id: 'fruitSoda', name: 'Fruit Soda', icon: '🥤' },
-    { id: 'croffles', name: 'Croffles', icon: '🥐' },
-    { id: 'cakes', name: 'Cakes', icon: '🍰' },
-    { id: 'pastries', name: 'Pastries', icon: '🥮' },
-    { id: 'croissant', name: 'Croissant Sandwich', icon: '🥪' },
-    { id: 'fries', name: 'Fries', icon: '🍟' },
-    { id: 'pasta', name: 'Pasta', icon: '🍝' },
-    { id: 'cookies', name: 'Cookies', icon: '🍪' },
-  ];
+    const categories = [
+      { id: 'coffee', name: 'Coffee Based Drinks', icon: '☕' },
+      { id: 'nonCoffee', name: 'Non-Coffee Drinks', icon: '🥛' },
+      { id: 'matcha', name: 'Matcha Series', icon: '🍵' },
+      { id: 'cloud', name: 'Cloud Series', icon: '☁️' },
+      { id: 'frappe', name: 'Frappe Drinks', icon: '🥤' },
+      { id: 'yogurt', name: 'Yogurt Drinks', icon: '🧁' },
+      { id: 'milkTea', name: 'Milk Tea', icon: '🧋' },
+      { id: 'fruitTea', name: 'Fruit Tea', icon: '🍵' },
+      { id: 'fruitSoda', name: 'Fruit Soda', icon: '🥤' },
+      { id: 'croffles', name: 'Croffles', icon: '🥐' },
+      { id: 'cakes', name: 'Cakes', icon: '🍰' },
+      { id: 'pastries', name: 'Pastries', icon: '🥮' },
+      { id: 'croissant', name: 'Croissant Sandwich', icon: '🥪' },
+      { id: 'fries', name: 'Fries', icon: '🍟' },
+      { id: 'pasta', name: 'Pasta', icon: '🍝' },
+      { id: 'cookies', name: 'Cookies', icon: '🍪' },
+    ];
 
-  useEffect(() => {
-    // Check if user is logged in with Supabase
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        navigate('/login');
-        return;
-      }
-      
-      setUser(session.user);
+    const menuItems = {
+        coffee: [
+            { id: 'c1', name: 'Espresso', price: 90, image: '☕' },
+            { id: 'c2', name: 'Cappuccino', price: 120, image: '☕' },
+            { id: 'c3', name: 'Latte', price: 130, image: '☕' },
+        ],
+        nonCoffee: [
+            { id: 'nc1', name: 'Hot Chocolate', price: 110, image: '🍫' },
+            { id: 'nc2', name: 'Steamed Milk', price: 90, image: '🥛' },
+        ],
+        matcha: [
+            { id: 'm1', name: 'Matcha Latte', price: 140, image: '🍵' },
+            { id: 'm2', name: 'Iced Matcha', price: 150, image: '🍵' },
+        ],
+        cloud: [
+            { id: 'cl1', name: 'Cloud Coffee', price: 160, image: '☁️' },
+            { id: 'cl2', name: 'Vanilla Cloud', price: 170, image: '☁️' },
+        ],
+        frappe: [
+            { id: 'f1', name: 'Coffee Frappe', price: 160, image: '🥤' },
+            { id: 'f2', name: 'Mocha Frappe', price: 170, image: '🥤' },
+        ],
+        yogurt: [
+            { id: 'y1', name: 'Strawberry Yogurt', price: 140, image: '🍓' },
+            { id: 'y2', name: 'Blueberry Yogurt', price: 140, image: '🫐' },
+        ],
+        milkTea: [
+            { id: 'mt1', name: 'Classic Milk Tea', price: 120, image: '🧋' },
+            { id: 'mt2', name: 'Taro Milk Tea', price: 130, image: '🧋' },
+        ],
+        fruitTea: [
+            { id: 'ft1', name: 'Lemon Tea', price: 110, image: '🍋' },
+            { id: 'ft2', name: 'Peach Tea', price: 120, image: '🍑' },
+        ],
+        fruitSoda: [
+            { id: 'fs1', name: 'Strawberry Soda', price: 130, image: '🥤' },
+            { id: 'fs2', name: 'Blue Lemonade', price: 130, image: '🥤' },
+        ],
+        croffles: [
+            { id: 'cr1', name: 'Plain Croffle', price: 95, image: '🥐' },
+            { id: 'cr2', name: 'Chocolate Croffle', price: 110, image: '🥐' },
+        ],
+        cakes: [
+            { id: 'ck1', name: 'Chocolate Cake', price: 150, image: '🍰' },
+            { id: 'ck2', name: 'Cheesecake', price: 160, image: '🍰' },
+        ],
+        pastries: [
+            { id: 'p1', name: 'Cinnamon Roll', price: 120, image: '🥮' },
+            { id: 'p2', name: 'Danish', price: 110, image: '🥮' },
+        ],
+        croissant: [
+            { id: 'cs1', name: 'Ham & Cheese', price: 140, image: '🥪' },
+            { id: 'cs2', name: 'Tuna', price: 150, image: '🥪' },
+        ],
+        fries: [
+            { id: 'fr1', name: 'Regular Fries', price: 90, image: '🍟' },
+            { id: 'fr2', name: 'Cheese Fries', price: 120, image: '🍟' },
+        ],
+        pasta: [
+            { id: 'pa1', name: 'Carbonara', price: 180, image: '🍝' },
+            { id: 'pa2', name: 'Bolognese', price: 190, image: '🍝' },
+        ],
+        cookies: [
+            { id: 'co1', name: 'Chocolate Chip', price: 80, image: '🍪' },
+            { id: 'co2', name: 'Oatmeal', price: 80, image: '🍪' },
+        ],
     };
     
-    checkUser();
-  }, [navigate]);
 
-  useEffect(() => {
-    // Calculate total whenever cart changes
-    const newTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    setTotal(newTotal);
-  }, [cart]);
-
-  const addToCart = (item) => {
-    setCart(prevCart => {
-      // Check if item already exists in cart
-      const existingItemIndex = prevCart.findIndex(cartItem => cartItem.id === item.id);
-      
-      if (existingItemIndex >= 0) {
-        // Item exists, update quantity
-        const updatedCart = [...prevCart];
-        updatedCart[existingItemIndex] = {
-          ...updatedCart[existingItemIndex],
-          quantity: updatedCart[existingItemIndex].quantity + 1
+    useEffect(() => {
+        const checkUser = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                navigate('/login');
+                return;
+            }
+            setUser(session.user);
         };
-        return updatedCart;
-      } else {
-        // Item doesn't exist, add new item
-        return [...prevCart, { ...item, quantity: 1 }];
-      }
-    });
+        checkUser();
+    }, [navigate]);
+
+    useEffect(() => {
+        const newTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        setTotal(newTotal);
+    }, [cart]);
+
+    const addToCart = (item) => {
+        setCart(prevCart => {
+            const existingItemIndex = prevCart.findIndex(cartItem => cartItem.id === item.id);
+            if (existingItemIndex >= 0) {
+                const updatedCart = [...prevCart];
+                updatedCart[existingItemIndex].quantity += 1;
+                return updatedCart;
+            } else {
+                return [...prevCart, { ...item, quantity: 1 }];
+            }
+        });
+    };
+
+    const removeFromCart = (itemId) => {
+        setCart(prevCart => {
+            const existingItemIndex = prevCart.findIndex(item => item.id === itemId);
+            if (existingItemIndex >= 0) {
+                const updatedCart = [...prevCart];
+                if (updatedCart[existingItemIndex].quantity > 1) {
+                    updatedCart[existingItemIndex].quantity -= 1;
+                } else {
+                    updatedCart.splice(existingItemIndex, 1);
+                }
+                return updatedCart;
+            }
+            return prevCart;
+        });
+    };
+
+    const clearCart = () => setCart([]);
+
+    const convertToReadableFormat = (items) => {
+      return items.map(item => {
+          return `${item.name} ${item.image} (${item.quantity}x) (₱${(item.price * item.quantity).toFixed(2)})`;
+      }).join(', ');
   };
 
-  const removeFromCart = (itemId) => {
-    setCart(prevCart => {
-      const existingItemIndex = prevCart.findIndex(item => item.id === itemId);
-      
-      if (existingItemIndex >= 0) {
-        const updatedCart = [...prevCart];
-        if (updatedCart[existingItemIndex].quantity > 1) {
-          // Reduce quantity if more than 1
-          updatedCart[existingItemIndex] = {
-            ...updatedCart[existingItemIndex],
-            quantity: updatedCart[existingItemIndex].quantity - 1
-          };
-        } else {
-          // Remove item if quantity is 1
-          updatedCart.splice(existingItemIndex, 1);
+    const handleCheckout = () => {
+        if (cart.length === 0) {
+            alert('Please add items to cart before checkout');
+            return;
         }
-        return updatedCart;
+        setShowPaymentModal(true);
+    };
+
+    const handlePaymentSubmit = async () => {
+      if (paymentMethod === 'cash' && (!amountReceived || parseFloat(amountReceived) < total)) {
+          alert('Please enter a valid amount received');
+          return;
       }
-      return prevCart;
-    });
-  };
-
-  const clearCart = () => {
-    setCart([]);
-  };
-
-  const handleCheckout = () => {
-    if (cart.length === 0) {
-      alert('Please add items to cart before checkout');
-      return;
-    }
-    setShowPaymentModal(true);
-  };
-
-  const handlePaymentSubmit = async () => {
-    if (paymentMethod === 'cash' && (!amountReceived || parseFloat(amountReceived) < total)) {
-      alert('Please enter a valid amount received');
-      return;
-    }
-
-    setLoading(true);
-    
-    try {
-      // Calculate change if paying with cash
-      if (paymentMethod === 'cash') {
-        setChange(parseFloat(amountReceived) - total);
-      }
-
-      // Get payment details based on method
-      let paymentDetails = { method: paymentMethod };
-      
-      // Add specific details based on payment method
-      if (paymentMethod === 'card') {
-        paymentDetails.cardType = cardType;
-        paymentDetails.cardNetwork = cardNetwork;
-      } else if (paymentMethod === 'mobile') {
-        paymentDetails.mobileType = mobilePaymentType;
-      }
-
-      // Record the sale in Supabase
-      const { data, error } = await supabase
-        .from('sales')
-        .insert([
-          { 
-            amount: total,
-            payment_method: paymentMethod,
-            payment_details: JSON.stringify(paymentDetails),
-            items: JSON.stringify(cart),
-            created_by: user.id
+  
+      setLoading(true);
+  
+      try {
+          let paymentDetails = {
+              method: paymentMethod,
+              cardType: paymentMethod === 'card' ? cardType : null,
+              cardNetwork: paymentMethod === 'card' ? cardNetwork : null,
+              mobilePaymentProvider: paymentMethod === 'mobile' ? mobilePaymentType : null
+          };
+  
+          if (paymentMethod === 'cash') {
+              setChange(parseFloat(amountReceived) - total);
           }
-        ]);
-      
-      if (error) throw error;
-      
-      // Show success message
-      setOrderComplete(true);
-      
-      // Reset after 3 seconds
-      setTimeout(() => {
-        setShowPaymentModal(false);
-        setOrderComplete(false);
-        setCart([]);
-        setAmountReceived('');
-        setChange(0);
-        // Reset payment method options
-        setCardType('credit');
-        setCardNetwork('visa');
-        setMobilePaymentType('gcash');
-      }, 3000);
-      
-    } catch (error) {
-      console.error('Error processing payment:', error);
-      alert('Failed to process payment. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+  
+          const readableItems = convertToReadableFormat(cart); 
+  
+          const { data, error } = await supabase
+              .from('sales')
+              .insert([
+                  { 
+                      amount: total,
+                      items: readableItems, // Send the readable string here
+                      payment_method: paymentMethod,
+                      card_type: paymentDetails.cardType,
+                      card_network: paymentDetails.cardNetwork,
+                      mobile_payment_provider: paymentDetails.mobilePaymentProvider,
+                      created_by: user.id
+                  }
+              ]);
+  
+          if (error) throw error;
+  
+          setOrderComplete(true);
+  
+          setTimeout(() => {
+              setShowPaymentModal(false);
+              setOrderComplete(false);
+              clearCart();
+              setAmountReceived('');
+              setChange(0);
+              setCardType(null);
+              setCardNetwork(null);
+              setMobilePaymentType(null);
+          }, 3000);
+
+          console.log("Payment Details", {  //DEBUG
+              amount: total,
+              items: readableItems,  // Makes output readable
+              payment_method: paymentMethod,
+              card_type: cardType,
+              card_network: cardNetwork,
+              mobile_payment_provider: mobilePaymentType,
+              user_id: user.id
+          });
+  
+      } catch (error) {
+          console.error('Error processing payment:', error);
+          alert('Failed to process payment. Please try again.');
+      } finally {
+          setLoading(false);
+      }
   };
 
   const handleBackToDashboard = () => {
       navigate('/dashboard');
     };
-  // Fix the return statement structure
+
   return (
     <div className="pos-container">
       <aside className="pos-sidebar">
