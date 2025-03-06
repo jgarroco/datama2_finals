@@ -126,37 +126,50 @@ const POS = () => {
         setTotal(newTotal);
     }, [cart]);
 
-    const addToCart = (item) => {
-        setCart(prevCart => {
-            const existingItemIndex = prevCart.findIndex(cartItem => cartItem.id === item.id);
-            if (existingItemIndex >= 0) {
-                const updatedCart = [...prevCart];
-                updatedCart[existingItemIndex].quantity += 1;
-                return updatedCart;
-            } else {
-                return [...prevCart, { ...item, quantity: 1 }];
-            }
-        });
-    };
-
-    const removeFromCart = (itemId) => {
-        setCart(prevCart => {
-            const existingItemIndex = prevCart.findIndex(item => item.id === itemId);
-            if (existingItemIndex >= 0) {
-                const updatedCart = [...prevCart];
-                if (updatedCart[existingItemIndex].quantity > 1) {
-                    updatedCart[existingItemIndex].quantity -= 1;
-                } else {
-                    updatedCart.splice(existingItemIndex, 1);
+    // This function needs to be modified to ensure it only adds 1 at a time
+        // Keep your existing addToCart function for adding from menu
+            const addToCart = (item) => {
+                setCart(prevCart => {
+                    const existingItemIndex = prevCart.findIndex(cartItem => cartItem.id === item.id);
+                    if (existingItemIndex >= 0) {
+                        const updatedCart = [...prevCart];
+                        updatedCart[existingItemIndex] = {
+                            ...updatedCart[existingItemIndex],
+                            quantity: updatedCart[existingItemIndex].quantity + 1
+                        };
+                        return updatedCart;
+                    } else {
+                        return [...prevCart, { ...item, quantity: 1 }];
+                    }
+                });
+            };
+        const incrementCartItem = (itemId) => {
+            setCart(prevCart => {
+                const existingItemIndex = prevCart.findIndex(item => item.id === itemId);
+                if (existingItemIndex >= 0) {
+                    const updatedCart = [...prevCart];
+                    updatedCart[existingItemIndex].quantity += 1;
+                    return updatedCart;
                 }
-                return updatedCart;
-            }
-            return prevCart;
-        });
-    };
-
+                return prevCart;
+            });
+        };
+        const removeFromCart = (itemId) => {
+            setCart(prevCart => {
+                const existingItemIndex = prevCart.findIndex(item => item.id === itemId);
+                if (existingItemIndex >= 0) {
+                    const updatedCart = [...prevCart];
+                    if (updatedCart[existingItemIndex].quantity > 1) {
+                        updatedCart[existingItemIndex].quantity -= 1;
+                    } else {
+                        updatedCart.splice(existingItemIndex, 1);
+                    }
+                    return updatedCart;
+                }
+                return prevCart;
+            });
+        };
     const clearCart = () => setCart([]);
-
     const convertToReadableFormat = (items) => {
       return items.map(item => {
           return `${item.name} ${item.image} (${item.quantity}x) (₱${(item.price * item.quantity).toFixed(2)})`;
@@ -293,7 +306,15 @@ const POS = () => {
             <h2>{categories.find(cat => cat.id === activeCategory)?.name}</h2>
             <div className="menu-items">
               {menuItems[activeCategory]?.map(item => (
-                <div key={item.id} className="menu-item" onClick={() => addToCart(item)}>
+                <div key={item.id} className="menu-item" onClick={() => {
+                  // Use a more explicit approach to ensure we're only adding one item
+                  const existingItem = cart.find(cartItem => cartItem.id === item.id);
+                  if (existingItem) {
+                    incrementCartItem(item.id);
+                  } else {
+                    setCart([...cart, { ...item, quantity: 1 }]);
+                  }
+                }}>
                   <div className="item-image">{item.image}</div>
                   <div className="item-details">
                     <div className="item-name">{item.name}</div>
@@ -318,6 +339,7 @@ const POS = () => {
                     <div className="cart-item-quantity">
                       <button onClick={() => removeFromCart(item.id)}>-</button>
                       <span>{item.quantity}</span>
+                      {/* Change this line to use addToCart instead of incrementCartItem */}
                       <button onClick={() => addToCart(item)}>+</button>
                     </div>
                     <div className="cart-item-price">₱{(item.price * item.quantity).toFixed(2)}</div>
